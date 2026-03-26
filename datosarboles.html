@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro Geográfico</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+        input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h3>Captura de Datos</h3>
+    <form id="geoForm">
+        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly>
+        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly>
+        <input type="file" id="foto" accept="image/*" required>
+        <button type="button" onclick="obtenerUbicacion()">Obtener Ubicación</button>
+        <button type="submit">Enviar al COBAED</button>
+    </form>
+
+    <script>
+        const SCRIPT_URL = 'TU_URL_DE_APPS_SCRIPT_AQUÍ';
+
+        function obtenerUbicacion() {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('latitud').value = pos.coords.latitude;
+                document.getElementById('longitud').value = pos.coords.longitude;
+            });
+        }
+
+        document.getElementById('geoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const file = document.getElementById('foto').files[0];
+            const reader = new FileReader();
+
+            reader.onload = function() {
+                const bytes = Array.from(new Uint8Array(reader.result));
+                const payload = {
+                    bytes: bytes,
+                    mimeType: file.type,
+                    fileName: file.name
+                };
+
+                const url = `${SCRIPT_URL}?latitud=${document.getElementById('latitud').value}&longitud=${document.getElementById('longitud').value}`;
+                
+                fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(res => alert('Datos guardados correctamente'))
+                .catch(err => console.error(err));
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
